@@ -1,0 +1,124 @@
+#!/bin/sh
+
+# PARAM: $1 = Harddrive, either "HDD1" or "HDD2"
+# PARAM: $2 = % disk space full
+updateStatus ()
+{
+	#if [ -z "$2" ] ;
+	#then 
+	#	echo "$1 not mounted!"
+	#	# send email
+	#elif [ "$2" -ge $limit5 ] && [ -z `grep "$1.checkHDD_L[5]" $HOME/` ]; 
+	#then
+	#	touch $HOME/$1.checkHDD_L5
+	#	echo "Limit 5 triggered: $1 $2% full"
+	#	# send email
+	#elif [ "$2" -ge $limit4 ] && [ -z `grep "$1.checkHDD_L[54]" $HOME/` ]; 
+	#then
+	#	touch $HOME/$1.checkHDD_L4
+	#	echo "Limit 4 triggered: $1 $2% full"
+	#	# send email
+	#elif [ "$2" -ge $limit3 ] && [ -z `grep "$1.checkHDD_L[543]" $HOME/` ]; 
+	#then
+	#	touch $HOME/$1.checkHDD_L3
+	#	echo "Limit 3 triggered: $1 $2% full"
+	#	# send email
+	#elif [ "$2" -ge $limit2 ] && [ -z `grep "$1.checkHDD_L[5432]" $HOME/` ]; 
+	#then
+	#	touch $HOME/$1.checkHDD_L2
+	#	echo "Limit 2 triggered: $1 $2% full"
+	#	# send email
+	#elif [ "$2" -ge $limit1 ] && [ -z `grep "$1.checkHDD_L[54321]" $HOME/` ]; 
+	#then
+	#	touch $HOME/$1.checkHDD_L1
+	#	echo "Limit 1 triggered: $1 $2% full"
+	#	# send email
+	#fi
+
+	if [ -z "$2" ] ;
+	then 
+		echo "$1 not mounted!"
+		# send email
+	elif [ "$2" -ge $limit1 ] && ! [ -e $HOME/$1.checkHDD_L1 ]; 
+	then
+		touch $HOME/$1.checkHDD_L1
+		echo "Limit 1 triggered: $1 $2% full" >> /tmp/checkHDD_msg.txt
+		# send email
+	elif [ "$2" -ge $limit2 ] && ! [ -e $HOME/$1.checkHDD_L2 ]; 
+	then
+		touch $HOME/$1.checkHDD_L2
+		echo "Limit 2 triggered: $1 $2% full" >> /tmp/checkHDD_msg.txt
+		# send email
+	elif [ "$2" -ge $limit3 ] && ! [ -e $HOME/$1.checkHDD_L3 ]; 
+	then
+		touch $HOME/$1.checkHDD_L3
+		echo "Limit 3 triggered: $1 $2% full" >> /tmp/checkHDD_msg.txt
+		# send email
+	elif [ "$2" -ge $limit4 ] && ! [ -e $HOME/$1.checkHDD_L4 ]; 
+	then
+		touch $HOME/$1.checkHDD_L2
+		echo "Limit 4 triggered: $1 $2% full" >> /tmp/checkHDD_msg.txt
+		# send email
+	elif [ "$2" -ge $limit5 ] && ! [ -e $HOME/$1.checkHDD_L5 ]; 
+	then
+		touch $HOME/$1.checkHDD_L5
+		echo "Limit 5 triggered: $1 $2% full" >> /tmp/checkHDD_msg.txt
+		# send email
+	fi
+}
+
+#Message we will email
+echo "`date`" > /tmp/checkHDD_msg.txt
+
+# Once disk used % crosses these limits, notify user.
+limit1=25
+limit2=40
+limit3=75
+limit4=85
+limit5=95
+
+#HDD1='/mnt/hdd1'
+#HDD2='/mnt/hdd2'
+
+while [ $# -gt 0 ];
+do
+	hdd1=`echo $1 | sed 's/.*\///g'`
+	#hdd2=`echo $2 | sed 's/.*\///g'`
+	#df -h | sed -nr "s/.* ([0-9]{1,2})%.*hdd2$/\1/gp"
+	percentFullHDD1=`df -h | sed -nr "s/.* ([0-9]{1,2})%.*$hdd1$/\1/gp"`
+	#percentFullHDD2=`df -h | sed -nr "s/.*([0-9]{1,2})%.*$hdd2/\1/gp"`
+	updateStatus $1 $percentFullHDD1
+	shift
+done
+	
+# use a tempfile for this.
+#rm /tmp/checkHDD_msg.txt
+
+#updateStatus $1 $percentFullHDD1
+#updateStatus $2 $percentFullHDD2
+
+
+#if [ -z "percentFullHDD1" ] || [ -z "percentFullHDD2" ];
+#then
+#	echo "HDD's not mounted!"
+#	# Send an email alert or something.
+#	exit 1
+#fi
+
+#echo $percentFullHDD1
+#echo $percentFullHDD2
+
+
+#echo $searchHDD2
+#echo $searchHDD1
+#
+#if [ -n "searchHDD1" ] || [ -n "searchHDD2" ];
+#then
+#	echo "ok"
+#
+#	percentFullHDD1=`echo $searchHDD1 | awk '{print $5}' | sed 's/%//g'`
+#	percentFullHDD2=`echo $searchHDD2 | awk '{print $5}' | sed 's/%//g'`
+#	echo $freeHDD2
+#	echo $freeHDD1
+#
+#fi
