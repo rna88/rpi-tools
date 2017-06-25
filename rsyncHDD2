@@ -1,0 +1,1 @@
+sudo rsync -av --delete-after /mnt/hdd1/ /mnt/hdd2/ > /tmp/rsyncHDD2.log
