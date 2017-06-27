@@ -1,40 +1,49 @@
 #!/bin/sh
 
-# PARAM: $1 = Harddrive, either "HDD1" or "HDD2"
+# Use the template for a new email message.
+messageTemplate='/home/user/message_checkHDD.txt'
+message='/tmp/message.txt'
+cp $messageTemplate $message
+sendMessage="0"
+
+# PARAM: $1 = Harddrives
 # PARAM: $2 = % disk space full
-
-message='/tmp/checkHDD_msg.txt'
-
 updateStatus ()
 {
 	if [ -z "$2" ] ;
 	then 
-		echo "$1 not mounted!"
+		echo "$1 not mounted!" >> $message
+		sendMessage="1"
 	elif [ "$2" -ge $limit1 ] && ! [ -e $HOME/$1.checkHDD_L1 ]; 
 	then
 		touch $HOME/$1.checkHDD_L1
 		echo "Limit 1 triggered: $1 $2% full" >> $message
+		sendMessage="1"
 	elif [ "$2" -ge $limit2 ] && ! [ -e $HOME/$1.checkHDD_L2 ]; 
 	then
 		touch $HOME/$1.checkHDD_L2
 		echo "Limit 2 triggered: $1 $2% full" >> $message
+		sendMessage="1"
 	elif [ "$2" -ge $limit3 ] && ! [ -e $HOME/$1.checkHDD_L3 ]; 
 	then
 		touch $HOME/$1.checkHDD_L3
 		echo "Limit 3 triggered: $1 $2% full" >> $message
+		sendMessage="1"
 	elif [ "$2" -ge $limit4 ] && ! [ -e $HOME/$1.checkHDD_L4 ]; 
 	then
 		touch $HOME/$1.checkHDD_L2
 		echo "Limit 4 triggered: $1 $2% full" >> $message
+		sendMessage="1"
 	elif [ "$2" -ge $limit5 ] && ! [ -e $HOME/$1.checkHDD_L5 ]; 
 	then
 		touch $HOME/$1.checkHDD_L5
 		echo "Limit 5 triggered: $1 $2% full" >> $message
+		sendMessage="1"
 	fi
 }
 
-#Message we will email
-echo "`date`" > $message
+# Message we will email (-e gives backslash interpretation)
+echo "`date`" >> $message
 
 # Once disk used % crosses these limits, notify user.
 limit1=25
@@ -43,7 +52,7 @@ limit3=75
 limit4=85
 limit5=95
 
-
+# Process all arguments (assumed to be harddrives).
 while [ $# -gt 0 ];
 do
 	hdd=`echo $1 | sed 's/.*\///g'`
@@ -51,3 +60,9 @@ do
 	updateStatus $1 $percentFullHDD
 	shift
 done
+
+# Send email.
+if [ "$sendMessage" = "1" ];
+then
+	ssmtp email@email.com < $message
+fi 
