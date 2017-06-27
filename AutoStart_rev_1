@@ -1,0 +1,169 @@
+#!/bin/bash
+# /etc/init.d/noip2
+
+### BEGIN INIT INFO
+# Provides:		noip
+# Required-Start:	$remote_fs $syslog
+# Required-Stop:	$remote_fs $syslog
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description: Script meant to start NTP and noip processes on startup.
+### END INIT INFO
+
+#Globals
+red='\x1B[0;31m'
+bold_red='\x1B[01;31m'
+bold_blue='\x1B[01;34m'
+bold_green='\x1B[01:32m'
+bold_orange='\x1B[01;91m'
+bold_yellow='\x1B[01;33m'
+bold_white='\x1B[01;37m'
+bold_purple='\x1B[01;35m'
+NC='\x1B[0m' # No Color
+
+emailAddress=''
+ntpLogFile='/tmp/ntpdate.log'
+genericLogFile='/tmp/generic.log'
+testLogFile='/tmp/test_generic.log'
+
+case "$1" in
+start)
+	bold_red='\x1B[01;31m'
+	bold_orange='\x1B[01;91m'
+	NC='\x1B[0m' # No Color
+
+	echo -e $bold_orange"Starting noip2."$NC
+	/usr/local/bin/noip2
+
+	echo -e $bold_orange"Synchronizing system time using ntpdate..."$NC
+	sudo ntpdate -u pool.ntp.org >> $ntpLogFile #Note need sudo permissions
+
+	#Send startup e###mailand include a comment and the ntpdate output
+	DATE_START=$(date)
+        echo "[ "$DATE_START" ]" "BOOT:" "Booting up and synchronizing the system time using NTP." > $genericLogFile
+	echo "[ "$(date)" ]" "BOOT:" $(awk 'END{print}' $ntpLogFile) >> $genericLogFile
+
+	 echo -e $bold_orange"Sending boot notification email."$NC
+	 ###mail-s "Session: $DATE_START" $emailAddress < $genericLogFile
+
+	#Test to see if the clock has been updated to the correct time.
+        #If not, keep attempting to connect to the ntp servers for 5 minutes
+        SYSTEM_YEAR=$(date | awk {'print $6'})  #NOTE: The $() expression evaluates what is inside the brackets ina  new shell.
+        STARTING_YEAR=2017
+	COUNT=1
+	MAX_ITER=5
+        while [[ $SYSTEM_YEAR -lt $STARTING_YEAR ]] && [[ COUNT -lt MAX_ITER ]] ; do
+                echo -e $bold_red "Current system year of" $SYSTEM_YEAR "is out of sync!"$NC
+                echo -e $bold_red "Waiting 60 seconds for the next ntpdate clock update..." $NC
+                echo "[ "$(date)" ]" "BOOT:" "Retrying NTP sync" >> $genericLogFile
+		sudo ntpdate -u pool.ntp.org >> $ntpLogFile
+		let COUNT=COUNT+1
+                sleep 60
+                SYSTEM_YEAR=$(date | awk {'print $6'})
+        done
+	
+	# If all connection attempts were unsuccessful, shutdown the server. 
+	if [[ $COUNT -eq $MAX_ITER ]]; then
+        	echo -e $bold_red $MAX_ITER "attempts to contact ntp server reached. Shutting down."$NC
+		echo  "[ "$(date)" ]" "BOOT:" $MAX_ITER "attempts to contact ntp server reached. Shutting down." >> $genericLogFile
+		###mail-s "RE:Session: $DATE_START" $emailAddress < $genericLogFile
+		sudo shutdown -h now
+	else
+        	echo -e $bold_orange "Established connection to NTP servers! Sending confirmation email." $NC
+		echo "[ "$(date)" ]" "BOOT:" "Established connection to NTP servers!" >> $genericLogFile
+		echo " " >> $genericLogFile
+		###mail-s "RE:Session: $DATE_START" $emailAddress < $genericLogFile
+	fi
+;;
+stop)
+	echo -e $bold_orange"Stopping noip2"$NC
+	killall noip2
+
+	#Send shutdown email.
+	DATE_END=$(date)
+        TOTAL_UPTIME=$(uptime)
+        TOTAL_WRITES=$(awk '{print $7}' /sys/block/mmcblk0/stat)
+        DATE_ORG_TEST=$(awk '{ print $4  $9 }' $genericLogFile)
+
+        #Retrieve the start date so we will have a subject line with the
+        # same name as the start email. This makes all emails
+        # from this session under one thread.
+        DATE_ORG=$(awk 'NR==1{print $2" "$3" " $4" "$5" "$6" "$7}' $genericLogFile )
+        echo -e $bold_orange"Sending shutdown notification email"$NC
+        # Append a new line for the shutdown messages
+        echo " " >> $genericLogFile
+        echo "[ "$(date)" ]" "SHUT:" "Total writes to mmcblk0:" $TOTAL_WRITES >> $genericLogFile
+        echo "[ "$(date)" ]" "SHUT:" "Final stats:" $TOTAL_UPTIME >> $genericLogFile
+        echo "[ "$(date)" ]" "SHUT:" "Shutting down on:" $DATE_END >> $genericLogFile
+        ###mail-s "RE:Session: $DATE_ORG"  $emailAddress < $genericLogFile
+	###mpack -s "RE:Session: $DATE_ORG" -a $genericLogFile $emailAddress 
+;;
+noip2Info)
+	echo "Displaying noip2 status"
+	/usr/local/bin/noip2 -S
+;;
+noip2Start)
+	echo "Starting noip2"
+        /usr/local/bin/noip2
+;;
+noip2_Stop)
+	 echo "Stopping noip2"
+        killall noip2
+;;
+clockUpdate)
+	 echo "Updating system time through ntpdate"
+        ntpdate -d pool.ntp.org
+;;
+testStart)
+	DATE_START=$(date)
+	#export DATE_START
+        echo "Sending boot notification email"
+        echo "Booting up on:" $DATE_START > $testLogFile
+         ###mail-s "Session: $DATE_START" $emailAddress < $testLogFile
+;;
+test_Stop)
+	DATE_END=$(date)
+	TOTAL_UPTIME=$(uptime)
+	TOTAL_WRITES=$(awk '{print $7}' /sys/block/mmcblk0/stat)
+	DATE_ORG_TEST=$(awk '{ print $4  $9 }' $testLogFile)
+	
+	#Retrieve the start date so we will have a subject line with the 
+	# same name as the start email. This makes g###mailorganize all emails
+	# from this session under one thread.
+	DATE_ORG=$(awk 'NR==1{print $4" "$5" " $6" "$7" "$8" "$9}' $testLogFile )
+	echo "Sending shutdown notification email"
+	# Append a new line for the shutdown messages
+	echo $" " >> $testLogFile
+	echo "Total writes to mmcblk0:" $TOTAL_WRITES >> $testLogFile
+	echo "Final stats:" $TOTAL_UPTIME >> $testLogFile
+        echo "Shutting down on:" $DATE_END >> $testLogFile
+        ###mail-s "Session: $DATE_ORG"  $emailAddress < $testLogFile
+;;
+*)
+red='\x1B[0;31m'
+bold_red='\x1B[01;31m'
+bold_blue='\x1B[01;34m'
+bold_green='\x1B[01:32m'
+bold_orange='\x1B[01;91m'
+bold_yellow='\x1B[01;33m'
+bold_white='\x1B[01;37m'
+bold_purple='\x1B[01;35m'
+NC='\x1B[0m' # No Color
+
+
+echo -e $bold_yellow"Usage:   /etc/init.d/AutoStart_rev_1 <argument>"$NC
+echo " "
+echo -e $bold_purple"Argument		Description"$NC
+echo "-start			(DO NOT USE) Starts all processes and sends a new session email."
+echo "-stop			(DO NOT USE) Stops all processes and sends a shutdown email."
+echo "-noip2Start		Starts noip2."
+echo "-noip2_Stop		Stops noip2."
+echo "-noip2Info		Gives status of current noip2 process."
+echo "-clockUpdate		Connects to ntpdate servers to update system time."
+echo "-testStart		A test of the emailsent during the start routine."
+echo "-test_Stop)		A test of the emailsent during the stop routine."
+exit 1
+;;
+esac
+
+exit 0
