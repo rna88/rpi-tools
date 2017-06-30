@@ -73,7 +73,12 @@ start)
 		echo "[ "$(date)" ]" "BOOT:" "Established connection to NTP servers!" >> $genericLogFile
 		echo " " >> $genericLogFile
 		###mail-s "RE:Session: $DATE_START" $emailAddress < $genericLogFile
+		# Start fake cron
+		/home/pool/fakeCron
+		echo "[ "$(date)" ]" "BOOT:" "Starting fake Cron." >> $genericLogFile
 	fi
+	
+	
 ;;
 stop)
 	echo -e $bold_orange"Stopping noip2"$NC

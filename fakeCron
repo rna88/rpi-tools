@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Run command once a day
+currentDay=`date '+%d'`
+
+while true;
+do
+	if [ `date '+%d'` != "$currentDay" ];
+	then
+		currentDay=`date '+%d'`
+		/home/pool/checkHDD '/mnt/hdd1' '/mnt/hdd2' '/boot' '/'
+	else
+		sleep 4h
+	fi
+done

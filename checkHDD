@@ -1,10 +1,12 @@
 #!/bin/sh
 
 # Use the template for a new email message.
-messageTemplate='/home/user/message_checkHDD.txt'
+emailAddress='cinnuv@gmail.com'
+messageTemplate='/home/pool/message_checkHDD.txt'
 message='/tmp/message.txt'
 cp $messageTemplate $message
 sendMessage="0"
+HOME='/home/pool'
 
 # PARAM: $1 = Harddrives
 # PARAM: $2 = % disk space full
@@ -47,7 +49,7 @@ echo "`date`" >> $message
 
 # Once disk used % crosses these limits, notify user.
 limit1=25
-limit2=40
+limit2=50
 limit3=75
 limit4=85
 limit5=95
@@ -64,5 +66,5 @@ done
 # Send email.
 if [ "$sendMessage" = "1" ];
 then
-	ssmtp email@email.com < $message
+	ssmtp $emailAddress < $message
 fi 
