@@ -6,7 +6,7 @@ messageTemplate='/home/pool/message_checkHDD.txt'
 message='/tmp/message.txt'
 cp $messageTemplate $message
 sendMessage="0"
-HOME='/home/pool'
+TRIGGER_PATH='/tmp'
 
 # PARAM: $1 = Harddrives
 # PARAM: $2 = % disk space full
@@ -16,29 +16,29 @@ updateStatus ()
 	then 
 		echo "$1 not mounted!" >> $message
 		sendMessage="1"
-	elif [ "$2" -ge $limit1 ] && ! [ -e $HOME/$1.checkHDD_L1 ]; 
+	elif [ "$2" -ge $limit1 ] && ! [ -e $TRIGGER_PATH/$1.checkHDD_L1 ]; 
 	then
-		touch $HOME/$1.checkHDD_L1
+		touch $TRIGGER_PATH/$1.checkHDD_L1
 		echo "Limit 1 triggered: $1 $2% full" >> $message
 		sendMessage="1"
-	elif [ "$2" -ge $limit2 ] && ! [ -e $HOME/$1.checkHDD_L2 ]; 
+	elif [ "$2" -ge $limit2 ] && ! [ -e $TRIGGER_PATH/$1.checkHDD_L2 ]; 
 	then
-		touch $HOME/$1.checkHDD_L2
+		touch $TRIGGER_PATH/$1.checkHDD_L2
 		echo "Limit 2 triggered: $1 $2% full" >> $message
 		sendMessage="1"
-	elif [ "$2" -ge $limit3 ] && ! [ -e $HOME/$1.checkHDD_L3 ]; 
+	elif [ "$2" -ge $limit3 ] && ! [ -e $TRIGGER_PATH/$1.checkHDD_L3 ]; 
 	then
-		touch $HOME/$1.checkHDD_L3
+		touch $TRIGGER_PATH/$1.checkHDD_L3
 		echo "Limit 3 triggered: $1 $2% full" >> $message
 		sendMessage="1"
-	elif [ "$2" -ge $limit4 ] && ! [ -e $HOME/$1.checkHDD_L4 ]; 
+	elif [ "$2" -ge $limit4 ] && ! [ -e $TRIGGER_PATH/$1.checkHDD_L4 ]; 
 	then
-		touch $HOME/$1.checkHDD_L2
+		touch $TRIGGER_PATH/$1.checkHDD_L2
 		echo "Limit 4 triggered: $1 $2% full" >> $message
 		sendMessage="1"
-	elif [ "$2" -ge $limit5 ] && ! [ -e $HOME/$1.checkHDD_L5 ]; 
+	elif [ "$2" -ge $limit5 ] && ! [ -e $TRIGGER_PATH/$1.checkHDD_L5 ]; 
 	then
-		touch $HOME/$1.checkHDD_L5
+		touch $TRIGGER_PATH/$1.checkHDD_L5
 		echo "Limit 5 triggered: $1 $2% full" >> $message
 		sendMessage="1"
 	fi
