@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# hack for nameserver resolution (not the place for this).
+echo "nameserver 8.8.8.8" > /tmp/dhcpcd.resolv.conf
+
 # A simple crappy way of scheduling jobs without relying on cron. Runs every 1 hour.
 currentDay=`date '+%d'`
 
