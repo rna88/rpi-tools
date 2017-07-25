@@ -1,15 +1,23 @@
 #!/bin/bash
 
-# Run command once a day
+# A simple crappy way of scheduling jobs without relying on cron. Runs every 1 hour.
 currentDay=`date '+%d'`
 
 while true;
 do
+	# Check if a day has passed.
 	if [ `date '+%d'` != "$currentDay" ];
 	then
 		currentDay=`date '+%d'`
 		/home/pool/checkHDD '/mnt/hdd1' '/mnt/hdd2' '/boot' '/'
-	else
-		sleep 4h
 	fi
+
+	# Check if the time is 5AM.
+	if [ `date '+%H'` = '5' ];
+	then
+		/home/pool/rsyncHDD2
+	fi
+
+	sleep 1h
+
 done
