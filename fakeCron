@@ -16,7 +16,7 @@ do
 	fi
 
 	# Check if the time is 5AM.
-	if [ `date '+%H'` = '5' ];
+	if [ `date '+%H'` = '05' ];
 	then
 		/home/pool/rsyncHDD2
 	fi
